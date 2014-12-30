@@ -1,7 +1,7 @@
-import requests, serial, threading, time
+import requests, serial, threading, time, json
 from string import Formatter
 
-serialPath = '/dev/tty.usbserial-A702NLN4'
+serialPath = '/dev/ttyUSB0'
 eyed = '54a0b9eb66c27aff88cf753c'
 
 fmt = Formatter()
@@ -70,10 +70,15 @@ def push():
 	print "updating"
 	global update
 	while True:
-
-		update['time'] = time.strftime("%c")
-		print update
-		time.sleep(5)
+		try:
+			update['time'] = time.strftime("%c")
+			headers = {'Content-Type' : 'application/json'}
+			print requests.post('http://54.148.31.203:4040/api/update', data=json.dumps(update), headers=headers).text
+			time.sleep(5)
+		except Exception, e:
+			print "Ah, shit... something went wrong"
+			print e
+			time.sleep(10)
 
 pusher = threading.Thread(target=push)
 pusher.start()
