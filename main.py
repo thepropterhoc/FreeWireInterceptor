@@ -80,6 +80,7 @@ def push():
 			print e
 			time.sleep(10)
 
+time.sleep(20)
 pusher = threading.Thread(target=push)
 pusher.start()
 
