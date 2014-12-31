@@ -2,7 +2,7 @@ import requests, serial, threading, time, json
 from string import Formatter
 
 serialPath = '/dev/ttyUSB0'
-eyed = '54a0b9eb66c27aff88cf753c'
+eyed = '54a44532fa90942b6838cbd4'
 
 fmt = Formatter()
 update = {'id' : eyed}
@@ -20,16 +20,16 @@ def parse(frames):
 
 def handle200Frame(frame):
 	global update
-	packCurrent = "{0:.1f}".format(float(int(frame[0:4], 16)) / 10)
+	packCurrent = "{0:.1f}".format((float(int(frame[0:4], 16)) / 10) - 250.0)
 	packOpenVoltage = "{0:.1f}".format(float(int(frame[4:8], 16)) / 10)
 	packSummedVoltage = "{0:.1f}".format(float(int(frame[8:12], 16)) / 10)
-	packSOC = int(frame[12:14], 16)
-	packHealth = int(frame[14:], 16)
-	update['packCurrent'] = packCurrent
-	update['packOpenVoltage'] = packOpenVoltage
-	update['packSummedVoltage'] = packSummedVoltage
-	update['packSOC'] = packSOC
-	update['packHealth'] = packHealth
+	packSOC = str(float(int(frame[12:14], 16)) / 2.0)
+	packHealth = str(int(frame[14:], 16))
+	update['packCurrent'] = str(packCurrent)
+	update['packOpenVoltage'] = str(packOpenVoltage)
+	update['packSummedVoltage'] = str(packSummedVoltage)
+	update['packSOC'] = str(packSOC)
+	update['packHealth'] = str(packHealth)
 
 
 def handle201Frame(frame):
@@ -37,8 +37,8 @@ def handle201Frame(frame):
 	highCellVoltage = "{0:.1f}".format(float(int(frame[0:4], 16)) / 1000)
 	lowCellVoltage = "{0:.1f}".format(float(int(frame[4:8], 16)) / 1000)
 	avgCellVoltage = "{0:.1f}".format(float(int(frame[8:12], 16)) / 1000)
-	highTemperature = int(frame[12:14], 16) - 40
-	lowTemperature = int(frame[14:], 16) - 40
+	highTemperature = str(int(frame[12:14], 16) - 40)
+	lowTemperature = str(int(frame[14:], 16) - 40)
 	update['highCellVoltage'] = highCellVoltage
 	update['lowCellVoltage'] = lowCellVoltage
 	update['avgCellVoltage'] = avgCellVoltage
@@ -47,8 +47,8 @@ def handle201Frame(frame):
 
 def handle202Frame(frame):
 	global update
-	maxPackDCL = int(frame[0:2], 16)
-	maxPackCCL = int(frame[2:], 16)
+	maxPackDCL = str(int(frame[0:2], 16))
+	maxPackCCL = str(int(frame[2:], 16))
 	update['maxPackDCL'] = maxPackDCL
 	update['maxPackCCL'] = maxPackCCL
 
