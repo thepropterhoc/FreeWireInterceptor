@@ -8,6 +8,8 @@ eyed = '54a44532fa90942b6838cbd4'
 fmt = Formatter()
 update = {'id' : eyed}
 
+lines = ""
+
 def parse(frames):
 	for frame in frames[:-1]:
 			if len(frame) > 1 and frame[0] == 't':
@@ -53,42 +55,53 @@ def handle202Frame(frame):
 	update['maxPackDCL'] = maxPackDCL
 	update['maxPackCCL'] = maxPackCCL
 
-inputSerial = serial.Serial(inputSerialPath, 9600)
-if inputSerial.isOpen():
-	inputSerial.close()
-	inputSerial.open()
-
-inputSerial.write('O\r')
-
-lines = ""
-
-inputSerial.read(400)
-inputSerial.flush()
 
 def push():
-	print "updating"
+	time.sleep(20)
 	global update
-	outputSerial = serial.Serial(outputSerialPath, 9600)
-	outputSerial.open()
 	while True:
 		try:
-			#update['time'] = time.strftime("%c")
-			#headers = {'Content-Type' : 'application/json'}
-			#print requests.post('http://54.148.31.203:4040/api/update', data=json.dumps(update), headers=headers).text
-			outputSerial.write(json.dumps(update) + '\n')
-			time.sleep(5)
+			outputSerial = serial.Serial(outputSerialPath, 9600)
+			if not outputSerial.isOpen():
+				outputSerial.open()
+			print "Output Serial Name : " + outputSerial.name
+			while True:
+				try:
+					#update['time'] = time.strftime("%c")
+					#headers = {'Content-Type' : 'application/json'}
+					#print requests.post('http://54.148.31.203:4040/api/update', data=json.dumps(update), headers=headers).text
+					outputSerial.write(json.dumps(update) + '\n')
+					time.sleep(5)
+				except Exception, e:
+					print "Output Serial Write Exception : " + e
+					time.sleep(10)
 		except Exception, e:
-			print "Ah, shit... something went wrong"
-			print e
-			time.sleep(10)
+			print "Output Serial Exception : " + e
+			outputSerial.close()
+			time.sleep(5)
 
-time.sleep(20)
 pusher = threading.Thread(target=push)
 pusher.start()
 
 while True:
-	lines += ser.read(40)
-	frames = lines.split('\r')
-	lines = frames[-1]
-	parse(frames)
+	try:
+		inputSerial = serial.Serial(inputSerialPath, 9600)
+		if inputSerial.isOpen():
+			inputSerial.close()
+			inputSerial.open()
 
+		print "Input Serial Name : " + inputSerial.name
+
+		inputSerial.write('O\r')
+		inputSerial.read(400)
+		inputSerial.flush()
+
+		while True:
+			lines += ser.read(40)
+			frames = lines.split('\r')
+			lines = frames[-1]
+			parse(frames)
+	except Exception, e:
+		print 'Input Serial Exception : ' + e
+		inputSerial.close()
+		time.sleep(5)
