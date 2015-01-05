@@ -1,7 +1,8 @@
 import requests, serial, threading, time, json
 from string import Formatter
 
-serialPath = '/dev/ttyUSB0'
+inputSerialPath = '/dev/ttyUSB0'
+outputSerialPath = '/dev/ttyUSB1'
 eyed = '54a44532fa90942b6838cbd4'
 
 fmt = Formatter()
@@ -52,28 +53,29 @@ def handle202Frame(frame):
 	update['maxPackDCL'] = maxPackDCL
 	update['maxPackCCL'] = maxPackCCL
 
-ser = serial.Serial(serialPath, 9600)
-if ser.isOpen():
-	ser.close()
-	ser.open()
-	ser.write('O\r')
-else:
-	ser.open()
-	ser.write('O\r')
+inputSerial = serial.Serial(inputSerialPath, 9600)
+if inputSerial.isOpen():
+	inputSerial.close()
+	inputSerial.open()
+
+inputSerial.write('O\r')
 
 lines = ""
 
-ser.read(400)
-ser.flush()
+inputSerial.read(400)
+inputSerial.flush()
 
 def push():
 	print "updating"
 	global update
+	outputSerial = serial.Serial(outputSerialPath, 9600)
+	outputSerial.open()
 	while True:
 		try:
-			update['time'] = time.strftime("%c")
-			headers = {'Content-Type' : 'application/json'}
-			print requests.post('http://54.148.31.203:4040/api/update', data=json.dumps(update), headers=headers).text
+			#update['time'] = time.strftime("%c")
+			#headers = {'Content-Type' : 'application/json'}
+			#print requests.post('http://54.148.31.203:4040/api/update', data=json.dumps(update), headers=headers).text
+			outputSerial.write(json.dumps(update) + '\n')
 			time.sleep(5)
 		except Exception, e:
 			print "Ah, shit... something went wrong"
